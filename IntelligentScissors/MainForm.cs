@@ -16,6 +16,7 @@ namespace IntelligentScissors
         }
 
         RGBPixel[,] ImageMatrix;
+        Graph ImageGraph;
 
         private void btnOpen_Click(object sender, EventArgs e)
         {
@@ -26,6 +27,7 @@ namespace IntelligentScissors
                 string OpenedFilePath = openFileDialog1.FileName;
                 ImageMatrix = ImageOperations.OpenImage(OpenedFilePath);
                 ImageOperations.DisplayImage(ImageMatrix, pictureBox1);
+                ImageGraph = new Graph(ImageMatrix);
             }
             txtWidth.Text = ImageOperations.GetWidth(ImageMatrix).ToString();
             txtHeight.Text = ImageOperations.GetHeight(ImageMatrix).ToString();
@@ -39,9 +41,20 @@ namespace IntelligentScissors
             ImageOperations.DisplayImage(ImageMatrix, pictureBox2);
         }
 
-        private void pictureBox1_Click(object sender, EventArgs e)
+        private void pictureBox1_MouseClick(object sender, MouseEventArgs e)
+        {
+            ImageGraph.SetCurAnchor(e.X, e.Y);
+            List<KeyValuePair<int, int>> Path = ImageGraph.GetShortestPath(ImageGraph.GetLastAnchor());
+            if (Path.Count > 0)
+            {
+                ImageOperations.Update(ImageMatrix, Path, pictureBox1);
+            }
+        }
+
+        private void pictureBox1_MouseDoubleClick(object sender, MouseEventArgs e)
         {
 
         }
+
     }
 }

@@ -154,6 +154,9 @@ namespace IntelligentScissors
         /// </summary>
         /// <param name="ImageMatrix">2D array that contains the image</param>
         /// <param name="PicBox">PictureBox object to display the image on it</param>
+        
+        public static Bitmap ImageBMP;
+        
         public static void DisplayImage(RGBPixel[,] ImageMatrix, PictureBox PicBox)
         {
             // Create Image:
@@ -161,8 +164,8 @@ namespace IntelligentScissors
             int Height = ImageMatrix.GetLength(0);
             int Width = ImageMatrix.GetLength(1);
 
-            Bitmap ImageBMP = new Bitmap(Width, Height, PixelFormat.Format24bppRgb);
-
+            ImageBMP = new Bitmap(Width, Height, PixelFormat.Format24bppRgb);
+            
             unsafe
             {
                 BitmapData bmd = ImageBMP.LockBits(new Rectangle(0, 0, Width, Height), ImageLockMode.ReadWrite, ImageBMP.PixelFormat);
@@ -185,6 +188,18 @@ namespace IntelligentScissors
                 ImageBMP.UnlockBits(bmd);
             }
             PicBox.Image = ImageBMP;
+        }
+
+        public static void Update(RGBPixel[,] ImageMatrix, List<KeyValuePair<int, int>> Path, PictureBox PicBox)
+        {
+            foreach (var Node in Path)
+            {
+                ImageMatrix[Node.Key, Node.Value].red = 0;
+                ImageMatrix[Node.Key, Node.Value].green = 0;
+                ImageMatrix[Node.Key, Node.Value].blue = 0;
+            }
+            DisplayImage(ImageMatrix, PicBox);
+            //PicBox.Image = ImageBMP;
         }
 
 
