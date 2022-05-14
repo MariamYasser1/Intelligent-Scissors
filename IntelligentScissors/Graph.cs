@@ -4,6 +4,7 @@ using System.Linq;
 using System.Drawing;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace IntelligentScissors
 {
@@ -14,7 +15,7 @@ namespace IntelligentScissors
         int Height, Width, CurAnchor, StartAnchor, LastAnchor;
         int[] dx, dy, ParentNode;
         double[] ShortestPath;
-        double INF = 1e15, EPS = 1e-9;
+        double INF = -1, EPS = 1e-9;
         List<KeyValuePair<int, double>>[] AdjacencyList;
 
         public Graph(RGBPixel[,] ImageMatrix/*, string ImagePath*/)
@@ -42,6 +43,7 @@ namespace IntelligentScissors
             List<KeyValuePair<int, int>> Path = new List<KeyValuePair<int, int>>();
             while (CurNode != -1)
             {
+
                 Path.Add(GetCoordinates(CurNode));
                 CurNode = ParentNode[CurNode];
             }
@@ -78,17 +80,33 @@ namespace IntelligentScissors
             for (int i = 0; i < Height * Width; i++)
                 AdjacencyList[i] = new List<KeyValuePair<int, double>>();
 
-            for (int i = 0; i + 1 < Height; i++)
+            for (int i = 0; i < Height; i++)
             {
-                for (int j = 0; j + 1 < Width; j++)
+                for (int j = 0; j < Width; j++)
                 {
                     Vector2D Energy = ImageOperations.CalculatePixelEnergies(i, j, ImageMatrix);
                     int Idx = GetIndex(i, j);
                     int RightIdx = GetIndex(i, j + 1), BottomIdx = GetIndex(i + 1, j);
-                    AdjacencyList[Idx].Add(new KeyValuePair<int, double>(RightIdx, Energy.X));
-                    AdjacencyList[RightIdx].Add(new KeyValuePair<int, double>(Idx, Energy.X));
-                    AdjacencyList[Idx].Add(new KeyValuePair<int, double>(BottomIdx, Energy.Y));
-                    AdjacencyList[BottomIdx].Add(new KeyValuePair<int, double>(Idx, Energy.Y));
+                    if (j + 1 < Width)
+                    {
+                        double w = Energy.X;
+                        if (w == 0)
+                            w = double.MaxValue;
+                        else
+                            w = 1 / w;
+                        AdjacencyList[Idx].Add(new KeyValuePair<int, double>(RightIdx, w));
+                        AdjacencyList[RightIdx].Add(new KeyValuePair<int, double>(Idx, w));
+                    }
+                    if (i + 1 < Height)
+                    {
+                        double w = Energy.Y;
+                        if (w == 0)
+                            w = double.MaxValue;
+                        else
+                            w = 1 / w;
+                        AdjacencyList[Idx].Add(new KeyValuePair<int, double>(BottomIdx, w));
+                        AdjacencyList[BottomIdx].Add(new KeyValuePair<int, double>(Idx, w));
+                    }
                 }
             }
         }
@@ -98,7 +116,7 @@ namespace IntelligentScissors
             for (int i = 0; i < Height * Width; i++)
             {
                 ShortestPath[i] = INF;
-                ParentNode[i] = i;
+                ParentNode[i] = -1;
             }
         }
 
@@ -130,22 +148,31 @@ namespace IntelligentScissors
             EdgesSet.Add(new KeyValuePair<double, int>(0, CurAnchor));
             ShortestPath[CurAnchor] = 0;
             ParentNode[CurAnchor] = -1;
-
-            while (EdgesSet.Count > 0)
+            
+            using (StreamWriter outputFile = new StreamWriter("WriteLines.txt"))
             {
-                double CurDist = EdgesSet.ElementAt<KeyValuePair<double, int>>(0).Key;
-                int NodeIdx = EdgesSet.ElementAt<KeyValuePair<double, int>>(0).Value;
-                EdgesSet.Remove(new KeyValuePair<double, int>(CurDist, NodeIdx));
 
-                foreach (var Child in AdjacencyList[NodeIdx])
+                while (EdgesSet.Count > 0)
                 {
-                    if (ShortestPath[Child.Key] - CurDist - Child.Value > EPS)
+                    double CurDist = EdgesSet.ElementAt<KeyValuePair<double, int>>(0).Key;
+                    int NodeIdx = EdgesSet.ElementAt<KeyValuePair<double, int>>(0).Value;
+                    EdgesSet.Remove(new KeyValuePair<double, int>(CurDist, NodeIdx));
+
+                    outputFile.WriteLine("Node: " + NodeIdx + ", CurDist: " + CurDist);
+
+                    foreach (var Child in AdjacencyList[NodeIdx])
                     {
-                        ParentNode[Child.Key] = NodeIdx;
-                        ShortestPath[Child.Key] = CurDist + Child.Value;
-                        EdgesSet.Add(new KeyValuePair<double, int>(Child.Value + CurDist, Child.Key));
+                        if (ShortestPath[Child.Key] > CurDist + Child.Value + 1 || ShortestPath[Child.Key] == -1)
+                        {
+                            outputFile.WriteLine("Child: " + Child.Key + " " + Child.Value);
+                            ParentNode[Child.Key] = NodeIdx;
+                            ShortestPath[Child.Key] = CurDist + Child.Value + 1;
+                            outputFile.WriteLine("ShotestPath: " + ShortestPath[Child.Key]);
+                            EdgesSet.Add(new KeyValuePair<double, int>(Child.Value + CurDist + 1, Child.Key));
+                        }
                     }
                 }
+            
             }
         }
     }

@@ -194,9 +194,9 @@ namespace IntelligentScissors
         {
             foreach (var Node in Path)
             {
-                ImageMatrix[Node.Key, Node.Value].red = 0;
-                ImageMatrix[Node.Key, Node.Value].green = 0;
-                ImageMatrix[Node.Key, Node.Value].blue = 0;
+                ImageMatrix[Node.Value, Node.Key].red = 15;
+                ImageMatrix[Node.Value, Node.Key].green = 55;
+                ImageMatrix[Node.Value, Node.Key].blue = 254;
             }
             DisplayImage(ImageMatrix, PicBox);
             //PicBox.Image = ImageBMP;
