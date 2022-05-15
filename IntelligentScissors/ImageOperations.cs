@@ -194,12 +194,13 @@ namespace IntelligentScissors
         {
             foreach (var Node in Path)
             {
-                ImageMatrix[Node.Value, Node.Key].red = 15;
-                ImageMatrix[Node.Value, Node.Key].green = 55;
-                ImageMatrix[Node.Value, Node.Key].blue = 254;
+                ImageBMP.SetPixel(Node.Key,Node.Value,Color.Red);
+                //ImageMatrix[Node.Key, Node.Value].red = 15;
+                //ImageMatrix[Node.Key, Node.Value].green = 55;
+                //ImageMatrix[Node.Key, Node.Value].blue = 254;
             }
-            DisplayImage(ImageMatrix, PicBox);
-            //PicBox.Image = ImageBMP;
+            //DisplayImage(ImageMatrix, PicBox);
+            PicBox.Image = ImageBMP;
         }
 
 
@@ -304,7 +305,7 @@ namespace IntelligentScissors
         /// <param name="y">pixel y-coordinate</param>
         /// <param name="ImageMatrix">colored image matrix</param>
         /// <returns></returns>
-        private static Vector2D CalculateGradientAtPixel(int x, int y, RGBPixel[,] ImageMatrix)
+        private static Vector2D CalculateGradientAtPixel(int y, int x, RGBPixel[,] ImageMatrix)
         {
             Vector2D gradient = new Vector2D();
 

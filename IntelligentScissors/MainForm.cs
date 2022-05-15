@@ -10,6 +10,7 @@ namespace IntelligentScissors
 {
     public partial class MainForm : Form
     {
+        int mouseX , mouseY ;
         public MainForm()
         {
             InitializeComponent();
@@ -43,18 +44,39 @@ namespace IntelligentScissors
 
         private void pictureBox1_MouseClick(object sender, MouseEventArgs e)
         {
-            ImageGraph.SetCurAnchor(e.X, e.Y);
-            List<KeyValuePair<int, int>> Path = ImageGraph.GetShortestPath(ImageGraph.GetLastAnchor());
-            if (Path.Count > 0)
-            {
-                ImageOperations.Update(ImageMatrix, Path, pictureBox1);
-            }
+            mouseX = e.X;
+            mouseY = e.Y;
+            pictureBox1.Paint += new System.Windows.Forms.PaintEventHandler(this.pictureBox1_Paint);
+
+            //ImageGraph.SetCurAnchor(e.X, e.Y);
+            //List<KeyValuePair<int, int>> Path = ImageGraph.GetShortestPath(ImageGraph.GetLastAnchor());
+            //if (Path.Count > 0)
+            //{
+            //    ImageOperations.Update(ImageMatrix, Path, pictureBox1);
+            //}
         }
 
         private void pictureBox1_MouseDoubleClick(object sender, MouseEventArgs e)
         {
+            ImageGraph.SetCurAnchor(e.X, e.Y);
+            List<KeyValuePair<int, int>> Path = ImageGraph.GetShortestPath(ImageGraph.GetStartAnchor());
+            if (Path.Count > 0)
+            {
+                ImageOperations.Update(ImageMatrix, Path, pictureBox1);
+            }
 
         }
 
+        private void pictureBox1_Paint(object sender, PaintEventArgs e)
+        {
+            Pen blackPen = new Pen(Color.Red, 10);
+            // Create location and size of rectangle.
+            int width = 50;
+            int height = 50;
+
+            // Draw rectangle to screen.
+            e.Graphics.DrawRectangle(blackPen, mouseX, mouseY, width, height);
+            pictureBox1.Refresh();
+        }
     }
 }

@@ -27,7 +27,7 @@ namespace IntelligentScissors
             StartAnchor = CurAnchor = LastAnchor = -1;
             dx = new int[] {1, 0, -1, 0};
             dy = new int[] {0, 1, 0, -1};
-            ShortestPath = new double[Height * Width];
+            ShortestPath = new double[Height * Width + 10];
             ParentNode = new int[Height * Width];
             ConstructGraph();
         }
@@ -36,7 +36,10 @@ namespace IntelligentScissors
         {
             return LastAnchor;
         }
-
+        public int GetStartAnchor()
+        {
+            return StartAnchor;
+        }
         public List<KeyValuePair<int, int>> GetShortestPath(int NewAnchor)
         {
             int CurNode = NewAnchor;
@@ -91,7 +94,7 @@ namespace IntelligentScissors
                     {
                         double w = Energy.X;
                         if (w == 0)
-                            w = double.MaxValue;
+                            w = 1e16;
                         else
                             w = 1 / w;
                         AdjacencyList[Idx].Add(new KeyValuePair<int, double>(RightIdx, w));
@@ -101,7 +104,7 @@ namespace IntelligentScissors
                     {
                         double w = Energy.Y;
                         if (w == 0)
-                            w = double.MaxValue;
+                            w = 1e16;
                         else
                             w = 1 / w;
                         AdjacencyList[Idx].Add(new KeyValuePair<int, double>(BottomIdx, w));
@@ -142,37 +145,28 @@ namespace IntelligentScissors
 
         private void RunDijkstra()
         {
+            if (LastAnchor == -1)
+                return;
             Reset();
-            SortedSet<KeyValuePair<double, int>> EdgesSet = new SortedSet<KeyValuePair<double, int>>(new KvpKeyComparer<double, int>());
-
-            EdgesSet.Add(new KeyValuePair<double, int>(0, CurAnchor));
+            PriorityQueue pq = new PriorityQueue(false);
+            pq.Enqueue(new KeyValuePair<double,int>(0, CurAnchor));
             ShortestPath[CurAnchor] = 0;
             ParentNode[CurAnchor] = -1;
             
-            using (StreamWriter outputFile = new StreamWriter("WriteLines.txt"))
+            while (pq.Count > 0)
             {
-
-                while (EdgesSet.Count > 0)
+                var Node = pq.Dequeue();
+                double CurDist = Node.Key;
+                int NodeIdx = Node.Value;
+                foreach (var Child in AdjacencyList[NodeIdx])
                 {
-                    double CurDist = EdgesSet.ElementAt<KeyValuePair<double, int>>(0).Key;
-                    int NodeIdx = EdgesSet.ElementAt<KeyValuePair<double, int>>(0).Value;
-                    EdgesSet.Remove(new KeyValuePair<double, int>(CurDist, NodeIdx));
-
-                    outputFile.WriteLine("Node: " + NodeIdx + ", CurDist: " + CurDist);
-
-                    foreach (var Child in AdjacencyList[NodeIdx])
+                    if (ShortestPath[Child.Key] > CurDist + Child.Value || ShortestPath[Child.Key] == -1)
                     {
-                        if (ShortestPath[Child.Key] > CurDist + Child.Value + 1 || ShortestPath[Child.Key] == -1)
-                        {
-                            outputFile.WriteLine("Child: " + Child.Key + " " + Child.Value);
-                            ParentNode[Child.Key] = NodeIdx;
-                            ShortestPath[Child.Key] = CurDist + Child.Value + 1;
-                            outputFile.WriteLine("ShotestPath: " + ShortestPath[Child.Key]);
-                            EdgesSet.Add(new KeyValuePair<double, int>(Child.Value + CurDist + 1, Child.Key));
-                        }
+                        ParentNode[Child.Key] = NodeIdx;
+                        ShortestPath[Child.Key] = CurDist + Child.Value ;
+                        pq.Enqueue(new KeyValuePair<double, int>(CurDist + Child.Value, Child.Key));
                     }
                 }
-            
             }
         }
     }
