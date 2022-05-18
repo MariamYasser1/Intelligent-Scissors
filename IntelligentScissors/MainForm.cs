@@ -11,8 +11,12 @@ namespace IntelligentScissors
     public partial class MainForm : Form
     {
         int mouseX , mouseY ;
-        public MainForm()
+        List<KeyValuePair<int, int>> lastPath;
+        bool LiveWire;
+        public MainForm()   
         {
+            LiveWire = false;
+            lastPath = new List<KeyValuePair<int, int>>();
             InitializeComponent();
         }
 
@@ -44,16 +48,17 @@ namespace IntelligentScissors
 
         private void pictureBox1_MouseClick(object sender, MouseEventArgs e)
         {
-            mouseX = e.X;
+            LiveWire = true;
+            /*mouseX = e.X;
             mouseY = e.Y;
-            pictureBox1.Paint += new System.Windows.Forms.PaintEventHandler(this.pictureBox1_Paint);
-
-            //ImageGraph.SetCurAnchor(e.X, e.Y);
-            //List<KeyValuePair<int, int>> Path = ImageGraph.GetShortestPath(ImageGraph.GetLastAnchor());
-            //if (Path.Count > 0)
-            //{
-            //    ImageOperations.Update(ImageMatrix, Path, pictureBox1);
-            //}
+            pictureBox1.Paint += new System.Windows.Forms.PaintEventHandler(this.pictureBox1_Paint);*/
+            lastPath.Clear();
+            ImageGraph.SetCurAnchor(e.X, e.Y);
+            List<KeyValuePair<int, int>> Path = ImageGraph.GetShortestPath(ImageGraph.GetLastAnchor());
+            if (Path.Count > 0)
+            {
+                ImageOperations.Update(ImageMatrix, Path, pictureBox1);
+            }
         }
 
         private void pictureBox1_MouseDoubleClick(object sender, MouseEventArgs e)
@@ -64,7 +69,23 @@ namespace IntelligentScissors
             {
                 ImageOperations.Update(ImageMatrix, Path, pictureBox1);
             }
+            LiveWire = false;
+        }
 
+        private void pictureBox1_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (!LiveWire || ImageGraph == null || ImageGraph.GetStartAnchor() == -1)
+                return;
+            if (lastPath.Count > 0)
+            {
+                ImageOperations.Update2(ImageMatrix, lastPath, pictureBox1);
+            }
+            List<KeyValuePair<int, int>> Path = ImageGraph.GetShortestPath(ImageGraph.GetIndex(e.X,e.Y));
+            if (Path.Count > 0)
+            {
+                ImageOperations.Update(ImageMatrix, Path, pictureBox1);
+            }
+            lastPath = Path;
         }
 
         private void pictureBox1_Paint(object sender, PaintEventArgs e)

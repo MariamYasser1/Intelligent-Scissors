@@ -67,7 +67,7 @@ namespace IntelligentScissors
             return (x >= 0 && x < Height && y >= 0 && y < Width);
         }
 
-        private int GetIndex(int x, int y)
+        public int GetIndex(int x, int y)
         {
             return (x * Width) + y;
         }
@@ -123,36 +123,16 @@ namespace IntelligentScissors
             }
         }
 
-        public class KvpKeyComparer<TKey, TValue> : IComparer<KeyValuePair<TKey, TValue>>
-        where TKey : IComparable
-        {
-            public int Compare(KeyValuePair<TKey, TValue> x,
-                               KeyValuePair<TKey, TValue> y)
-            {
-                if (x.Key == null)
-                {
-                    if (y.Key == null)
-                        return 0;
-                    return -1;
-                }
-
-                if (y.Key == null)
-                    return 1;
-
-                return x.Key.CompareTo(y.Key);
-            }
-        }
+       
 
         private void RunDijkstra()
         {
-            if (LastAnchor == -1)
-                return;
             Reset();
             PriorityQueue pq = new PriorityQueue(false);
             pq.Enqueue(new KeyValuePair<double,int>(0, CurAnchor));
             ShortestPath[CurAnchor] = 0;
             ParentNode[CurAnchor] = -1;
-            
+         
             while (pq.Count > 0)
             {
                 var Node = pq.Dequeue();
@@ -163,11 +143,12 @@ namespace IntelligentScissors
                     if (ShortestPath[Child.Key] > CurDist + Child.Value || ShortestPath[Child.Key] == -1)
                     {
                         ParentNode[Child.Key] = NodeIdx;
-                        ShortestPath[Child.Key] = CurDist + Child.Value ;
+                        ShortestPath[Child.Key] = CurDist + Child.Value;
                         pq.Enqueue(new KeyValuePair<double, int>(CurDist + Child.Value, Child.Key));
                     }
                 }
             }
+            
         }
     }
 }

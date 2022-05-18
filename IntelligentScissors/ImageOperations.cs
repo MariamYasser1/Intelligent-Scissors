@@ -202,15 +202,28 @@ namespace IntelligentScissors
             //DisplayImage(ImageMatrix, PicBox);
             PicBox.Image = ImageBMP;
         }
+        public static void Update2(RGBPixel[,] ImageMatrix, List<KeyValuePair<int, int>> Path, PictureBox PicBox)
+        {
+            foreach (var Node in Path)
+            {
+                Color col = new Color();
+                col = Color.FromArgb( 0,ImageMatrix[Node.Value, Node.Key].red, ImageMatrix[Node.Value, Node.Key].green, ImageMatrix[Node.Value, Node.Key].blue);
+                ImageBMP.SetPixel(Node.Key, Node.Value, col);
+                //ImageMatrix[Node.Key, Node.Value].red = 15;
+                //ImageMatrix[Node.Key, Node.Value].green = 55;
+                //ImageMatrix[Node.Key, Node.Value].blue = 254;
+            }
+            //DisplayImage(ImageMatrix, PicBox);
+            PicBox.Image = ImageBMP;
+        }
 
-
-       /// <summary>
-       /// Apply Gaussian smoothing filter to enhance the edge detection 
-       /// </summary>
-       /// <param name="ImageMatrix">Colored image matrix</param>
-       /// <param name="filterSize">Gaussian mask size</param>
-       /// <param name="sigma">Gaussian sigma</param>
-       /// <returns>smoothed color image</returns>
+        /// <summary>
+        /// Apply Gaussian smoothing filter to enhance the edge detection 
+        /// </summary>
+        /// <param name="ImageMatrix">Colored image matrix</param>
+        /// <param name="filterSize">Gaussian mask size</param>
+        /// <param name="sigma">Gaussian sigma</param>
+        /// <returns>smoothed color image</returns>
         public static RGBPixel[,] GaussianFilter1D(RGBPixel[,] ImageMatrix, int filterSize, double sigma)
         {
             int Height = GetHeight(ImageMatrix);
