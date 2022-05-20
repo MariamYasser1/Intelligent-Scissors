@@ -45,7 +45,6 @@ namespace IntelligentScissors
                 Enqueue(item);
         }
 
-
         public void Enqueue(KeyValuePair<double,int> x)
         {
             list.Add(x);
@@ -54,7 +53,7 @@ namespace IntelligentScissors
             while (i > 0)
             {
                 int p = (i - 1) / 2;
-                if ((IsDescending ? -1 : 1) * Compare(list[p],x) <= 0) break;
+                if ((IsDescending ? -1 : 1) * Compare(list[p], x) <= 0) break;
 
                 list[i] = list[p];
                 i = p;
@@ -76,7 +75,7 @@ namespace IntelligentScissors
                 int b = i * 2 + 2;
                 int c = b < Count && (IsDescending ? -1 : 1) * Compare(list[b], list[a]) < 0 ? b : a;
 
-                if ((IsDescending ? -1 : 1) * Compare(list[c],root) >= 0) break;
+                if ((IsDescending ? -1 : 1) * Compare(list[c], root) >= 0) break;
                 list[i] = list[c];
                 i = c;
             }
@@ -84,7 +83,8 @@ namespace IntelligentScissors
             if (Count > 0) list[i] = root;
             return target;
         }
-        public static int Compare( KeyValuePair<double,int> A , KeyValuePair<double, int> B)
+
+        public static int Compare( KeyValuePair<double,int> A, KeyValuePair<double, int> B)
         {
             if (A.Key < B.Key) return -1;
             else if (A.Key > B.Key) return 1;
@@ -92,6 +92,7 @@ namespace IntelligentScissors
             else if(A.Value > B.Value) return 1;
             return 0;
         }
+
         public KeyValuePair<double,int> Peek()
         {
             if (Count == 0) throw new InvalidOperationException("Queue is empty.");

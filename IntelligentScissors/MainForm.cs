@@ -40,20 +40,20 @@ namespace IntelligentScissors
             txtHeight.Text = ImageOperations.GetHeight(ImageMatrix).ToString();
         }
 
-        private void DrawAnchor(MouseEventArgs e)
+        private void DrawAnchor(int X, int Y)
         {
             Graphics gBmp = Graphics.FromImage(ImageOperations.ImageBMP);
             gBmp.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
 
             Brush redBrush = new SolidBrush(Color.Red);
-            gBmp.FillRectangle(redBrush, e.X - 2, e.Y - 2, 4, 4);
+            gBmp.FillRectangle(redBrush, X - 2, Y - 2, 4, 4);
 
             pictureBox1.Image = ImageOperations.ImageBMP;
         }
 
-        private void DrawShortestPath( int x , int y , bool fix , bool fill)
+        private void DrawShortestPath(int x, int y, bool fix, bool fill)
         {
-            List<KeyValuePair<int, int>> Path = ImageGraph.GetShortestPath(ImageGraph.GetIndex(x,y),false);
+            List<KeyValuePair<int, int>> Path = ImageGraph.GetShortestPath(ImageGraph.GetIndex(x, y), false);
             if (fill)
             {
                 if (LastPath.Count > 0)
@@ -61,9 +61,21 @@ namespace IntelligentScissors
                     ImageOperations.Update2(ImageMatrix, LastPath, pictureBox1, LastPathColors);
                 }
                 LastPathColors.Clear();
-                foreach (var node in Path)
+                if (Path.Count > ImageGraph.GetPathMaxLength())
                 {
-                    LastPathColors.Add(ImageOperations.ImageBMP.GetPixel(node.Key, node.Value));
+                    int NewAnchor = Path.Count - ImageGraph.GetFrequency();
+                    DrawShortestPath(Path[NewAnchor].Key, Path[NewAnchor].Value, true, false);
+                    ImageGraph.SetCurAnchor(Path[NewAnchor].Key, Path[NewAnchor].Value, true);
+                    DrawAnchor(Path[NewAnchor].Key, Path[NewAnchor].Value);
+                    DrawShortestPath(x, y, false, true);
+                    return;
+                }
+                else
+                {
+                    foreach (var node in Path)
+                    {
+                        LastPathColors.Add(ImageOperations.ImageBMP.GetPixel(node.Key, node.Value));
+                    }
                 }
             }
             LastPath.Clear();
@@ -85,10 +97,10 @@ namespace IntelligentScissors
         private void pictureBox1_MouseClick(object sender, MouseEventArgs e)
         {
             LiveWire = true;
-            ImageGraph.SetCurAnchor(e.X, e.Y,true);
+            ImageGraph.SetCurAnchor(e.X, e.Y, true);
             var pair = ImageGraph.GetCoordinates(ImageGraph.GetLastAnchor());
             DrawShortestPath(pair.Key, pair.Value, true, false);
-            DrawAnchor(e);
+            DrawAnchor(e.X, e.Y);
         }
 
         private void pictureBox1_MouseDoubleClick(object sender, MouseEventArgs e)
@@ -97,10 +109,10 @@ namespace IntelligentScissors
             ImageGraph.SetCurAnchor(e.X, e.Y,true);
             var pair = ImageGraph.GetCoordinates(ImageGraph.GetStartAnchor());
             DrawShortestPath(pair.Key,pair.Value, true, false);
-            if (TestingHandling.GetImageFilePath().IndexOf("Complete") != -1 && TestingHandling.GetImageFilePath().IndexOf("Case2") != -1)
-            {
-                TestingHandling.PrintShortestPath(ImageGraph);
-            }
+            //if (TestingHandling.GetImageFilePath().IndexOf("Complete") != -1 && TestingHandling.GetImageFilePath().IndexOf("Case2") != -1)
+            //{
+            //    TestingHandling.PrintShortestPath(ImageGraph);
+            //}
         }
 
         private void pictureBox1_MouseMove(object sender, MouseEventArgs e)
@@ -110,5 +122,18 @@ namespace IntelligentScissors
             DrawShortestPath(e.X, e.Y, false, true);
         }
 
+        private void textBox3_TextChanged(object sender, EventArgs e)
+        {
+            int Frequency = int.Parse(textBox3.Text);
+            Frequency = Math.Min(50, Math.Max(5, Frequency));
+            ImageGraph.SetFrequency(Frequency);
+        }
+
+        private void textBox4_TextChanged(object sender, EventArgs e)
+        {
+            int PathLength = int.Parse(textBox4.Text);
+            PathLength = Math.Min(120, Math.Max(60, PathLength));
+            ImageGraph.SetPathMaxLength(PathLength);
+        }
     }
 }
