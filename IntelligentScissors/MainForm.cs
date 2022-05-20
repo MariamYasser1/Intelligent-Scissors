@@ -32,7 +32,6 @@ namespace IntelligentScissors
                 //Open the browsed image and display it
                 string OpenedFilePath = openFileDialog1.FileName;
                 TestingHandling.SetImageFilePath(OpenedFilePath);
-                MessageBox.Show(TestingHandling.GetImageFilePath());
                 ImageMatrix = ImageOperations.OpenImage(OpenedFilePath);
                 ImageOperations.DisplayImage(ImageMatrix, pictureBox1);
                 ImageGraph = new Graph(ImageMatrix);
@@ -54,7 +53,7 @@ namespace IntelligentScissors
 
         private void DrawShortestPath( int x , int y , bool fix , bool fill)
         {
-            List<KeyValuePair<int, int>> Path = ImageGraph.GetShortestPath(ImageGraph.GetIndex(x,y));
+            List<KeyValuePair<int, int>> Path = ImageGraph.GetShortestPath(ImageGraph.GetIndex(x,y),false);
             if (fill)
             {
                 if (LastPath.Count > 0)
@@ -86,7 +85,7 @@ namespace IntelligentScissors
         private void pictureBox1_MouseClick(object sender, MouseEventArgs e)
         {
             LiveWire = true;
-            ImageGraph.SetCurAnchor(e.X, e.Y);
+            ImageGraph.SetCurAnchor(e.X, e.Y,true);
             var pair = ImageGraph.GetCoordinates(ImageGraph.GetLastAnchor());
             DrawShortestPath(pair.Key, pair.Value, true, false);
             DrawAnchor(e);
@@ -95,9 +94,13 @@ namespace IntelligentScissors
         private void pictureBox1_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             LiveWire = false;
-            ImageGraph.SetCurAnchor(e.X, e.Y);
+            ImageGraph.SetCurAnchor(e.X, e.Y,true);
             var pair = ImageGraph.GetCoordinates(ImageGraph.GetStartAnchor());
             DrawShortestPath(pair.Key,pair.Value, true, false);
+            if (TestingHandling.GetImageFilePath().IndexOf("Complete") != -1 && TestingHandling.GetImageFilePath().IndexOf("Case2") != -1)
+            {
+                TestingHandling.PrintShortestPath(ImageGraph);
+            }
         }
 
         private void pictureBox1_MouseMove(object sender, MouseEventArgs e)

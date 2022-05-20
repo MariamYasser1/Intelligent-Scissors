@@ -12,13 +12,13 @@ namespace IntelligentScissors
     {
         RGBPixel[,] ImageMatrix;
         //Bitmap ImageBitMap;
-        int Height, Width, CurAnchor, StartAnchor, LastAnchor;
-        int[] dx, dy, ParentNode;
+        int Height, Width, CurAnchor, StartAnchor, LastAnchor , id , WindowSize;
+        int[] dx, dy, ParentNode , vis;
         double[] ShortestPath;
         double INF = -1, EPS = 1e-9;
         bool[] Fixed;
         List<KeyValuePair<int, double>>[] AdjacencyList;
-
+        List<int> Anchors;
         public List<KeyValuePair<int, double>>[] GetAdjacencyList()
         {
             return AdjacencyList;
@@ -29,12 +29,20 @@ namespace IntelligentScissors
             return Height * Width;
         }
 
-        public Graph(RGBPixel[,] ImageMatrix/*, string ImagePath*/)
+        public void SetWindowSize(int size)
         {
+            WindowSize = size;
+        }
+
+        public Graph(RGBPixel[,] ImageMatrix)
+        {
+            id = 0; 
+            WindowSize = 500;
+            Anchors = new List<int>();
             this.ImageMatrix = ImageMatrix;
-            //ImageBitMap = new Bitmap(ImagePath);
             Width = ImageMatrix.GetLength(0);
             Height = ImageMatrix.GetLength(1);
+            vis = new int[Height * Width];
             StartAnchor = CurAnchor = LastAnchor = -1;
             dx = new int[] {1, 0, -1, 0};
             dy = new int[] {0, 1, 0, -1};
@@ -48,26 +56,34 @@ namespace IntelligentScissors
         {
             return LastAnchor;
         }
+
         public int GetStartAnchor()
         {
             return StartAnchor;
         }
 
-        public List<KeyValuePair<int, int>> GetShortestPath(int NewAnchor)
+        public List<int> GetAnchors()
+        {
+            return Anchors;
+        }
+
+        public List<KeyValuePair<int, int>> GetShortestPath(int NewAnchor , bool is_live)
         {
             int CurNode = NewAnchor;
             List<KeyValuePair<int, int>> Path = new List<KeyValuePair<int, int>>();
             while (CurNode != -1)
             {
-                if (!Fixed[CurNode])
+                if (!Fixed[CurNode] || is_live)
                     Path.Add(GetCoordinates(CurNode));
                 CurNode = ParentNode[CurNode];
             }
             return Path;
         }
 
-        public void SetCurAnchor(int x, int y)
+        public void SetCurAnchor(int x, int y, bool Is_Anchor)
         {
+            if(Is_Anchor)
+                Anchors.Add(GetIndex(x,y));
             LastAnchor = CurAnchor;
             CurAnchor = GetIndex(x, y);
             RunDijkstra();
@@ -134,10 +150,11 @@ namespace IntelligentScissors
                     }
                 }
             }
-            if(TestingHandling.GetImageFilePath().IndexOf("Complete") != -1)
+           /* if (TestingHandling.GetImageFilePath().IndexOf("Complete") != -1)
                 TestingHandling.PrintConstructedGraphCompleteTest(this);
             else
                 TestingHandling.PrintConstructedGraphSampleTest(this);
+           */ Reset();
         }
 
         private void Reset()
@@ -149,23 +166,33 @@ namespace IntelligentScissors
             }
         }
 
+        bool NotValid( int node)
+        {
+            var A = GetCoordinates(node);
+            var B = GetCoordinates(CurAnchor);
+            return Math.Max(Math.Abs(A.Key - B.Key) ,Math.Abs(A.Value - B.Value)) > WindowSize;
+        }
+
         private void RunDijkstra()
         {
-            Reset();
+            id++;
             PriorityQueue pq = new PriorityQueue(false);
             pq.Enqueue(new KeyValuePair<double,int>(0, CurAnchor));
             ShortestPath[CurAnchor] = 0;
             ParentNode[CurAnchor] = -1;
-         
+            vis[CurAnchor] = id;
             while (pq.Count > 0)
             {
                 var Node = pq.Dequeue();
                 double CurDist = Node.Key;
                 int NodeIdx = Node.Value;
+                if (NotValid(NodeIdx))
+                    continue;
                 foreach (var Child in AdjacencyList[NodeIdx])
                 {
-                    if (ShortestPath[Child.Key] > CurDist + Child.Value || ShortestPath[Child.Key] == -1)
+                    if (vis[Child.Key] != id || ShortestPath[Child.Key] > CurDist + Child.Value)
                     {
+                        vis[Child.Key] = id;
                         ParentNode[Child.Key] = NodeIdx;
                         ShortestPath[Child.Key] = CurDist + Child.Value;
                         pq.Enqueue(new KeyValuePair<double, int>(CurDist + Child.Value, Child.Key));
