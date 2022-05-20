@@ -48,7 +48,6 @@ namespace IntelligentScissors
             Bitmap original_bm = new Bitmap(ImagePath);
             int Height = original_bm.Height;
             int Width = original_bm.Width;
-
             RGBPixel[,] Buffer = new RGBPixel[Height, Width];
 
             unsafe
@@ -195,25 +194,19 @@ namespace IntelligentScissors
             foreach (var Node in Path)
             {
                 ImageBMP.SetPixel(Node.Key,Node.Value,Color.Red);
-                //ImageMatrix[Node.Key, Node.Value].red = 15;
-                //ImageMatrix[Node.Key, Node.Value].green = 55;
-                //ImageMatrix[Node.Key, Node.Value].blue = 254;
+        
             }
-            //DisplayImage(ImageMatrix, PicBox);
             PicBox.Image = ImageBMP;
         }
-        public static void Update2(RGBPixel[,] ImageMatrix, List<KeyValuePair<int, int>> Path, PictureBox PicBox)
+
+        public static void Update2(RGBPixel[,] ImageMatrix, List<KeyValuePair<int, int>> Path, PictureBox PicBox, List<Color> LastPathColors)
         {
+            int idx = 0;
             foreach (var Node in Path)
             {
-                Color col = new Color();
-                col = Color.FromArgb( 0,ImageMatrix[Node.Value, Node.Key].red, ImageMatrix[Node.Value, Node.Key].green, ImageMatrix[Node.Value, Node.Key].blue);
-                ImageBMP.SetPixel(Node.Key, Node.Value, col);
-                //ImageMatrix[Node.Key, Node.Value].red = 15;
-                //ImageMatrix[Node.Key, Node.Value].green = 55;
-                //ImageMatrix[Node.Key, Node.Value].blue = 254;
+                ImageBMP.GetPixel(Node.Key, Node.Value);
+                ImageBMP.SetPixel(Node.Key, Node.Value, LastPathColors[idx++]);
             }
-            //DisplayImage(ImageMatrix, PicBox);
             PicBox.Image = ImageBMP;
         }
 
@@ -318,7 +311,7 @@ namespace IntelligentScissors
         /// <param name="y">pixel y-coordinate</param>
         /// <param name="ImageMatrix">colored image matrix</param>
         /// <returns></returns>
-        private static Vector2D CalculateGradientAtPixel(int y, int x, RGBPixel[,] ImageMatrix)
+        private static Vector2D CalculateGradientAtPixel(int x, int y, RGBPixel[,] ImageMatrix)
         {
             Vector2D gradient = new Vector2D();
 

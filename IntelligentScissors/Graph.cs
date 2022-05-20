@@ -8,7 +8,7 @@ using System.IO;
 
 namespace IntelligentScissors
 {
-    internal class Graph
+    public class Graph
     {
         RGBPixel[,] ImageMatrix;
         //Bitmap ImageBitMap;
@@ -16,19 +16,31 @@ namespace IntelligentScissors
         int[] dx, dy, ParentNode;
         double[] ShortestPath;
         double INF = -1, EPS = 1e-9;
+        bool[] Fixed;
         List<KeyValuePair<int, double>>[] AdjacencyList;
+
+        public List<KeyValuePair<int, double>>[] GetAdjacencyList()
+        {
+            return AdjacencyList;
+        }
+
+        public int getNodeSize()
+        {
+            return Height * Width;
+        }
 
         public Graph(RGBPixel[,] ImageMatrix/*, string ImagePath*/)
         {
             this.ImageMatrix = ImageMatrix;
             //ImageBitMap = new Bitmap(ImagePath);
-            Height = ImageMatrix.GetLength(0);
-            Width = ImageMatrix.GetLength(1);
+            Width = ImageMatrix.GetLength(0);
+            Height = ImageMatrix.GetLength(1);
             StartAnchor = CurAnchor = LastAnchor = -1;
             dx = new int[] {1, 0, -1, 0};
             dy = new int[] {0, 1, 0, -1};
             ShortestPath = new double[Height * Width + 10];
-            ParentNode = new int[Height * Width];
+            ParentNode = new int[Height * Width + 10];
+            Fixed = new bool[Height * Width + 10];
             ConstructGraph();
         }
 
@@ -40,14 +52,15 @@ namespace IntelligentScissors
         {
             return StartAnchor;
         }
+
         public List<KeyValuePair<int, int>> GetShortestPath(int NewAnchor)
         {
             int CurNode = NewAnchor;
             List<KeyValuePair<int, int>> Path = new List<KeyValuePair<int, int>>();
             while (CurNode != -1)
             {
-
-                Path.Add(GetCoordinates(CurNode));
+                if (!Fixed[CurNode])
+                    Path.Add(GetCoordinates(CurNode));
                 CurNode = ParentNode[CurNode];
             }
             return Path;
@@ -72,7 +85,12 @@ namespace IntelligentScissors
             return (x * Width) + y;
         }
 
-        private KeyValuePair<int, int> GetCoordinates(int idx)
+        public void Fix(int x, int y)
+        {
+            Fixed[GetIndex(x, y)] = true;  
+        }
+
+        public KeyValuePair<int, int> GetCoordinates(int idx)
         {
             return new KeyValuePair<int, int>(idx / Width, idx % Width);
         }
@@ -80,9 +98,13 @@ namespace IntelligentScissors
         private void ConstructGraph()
         {
             AdjacencyList = new List<KeyValuePair<int, double>>[Height * Width];
+            
             for (int i = 0; i < Height * Width; i++)
+            {
+                Fixed[i] = false;
                 AdjacencyList[i] = new List<KeyValuePair<int, double>>();
-
+            }
+            TestingHandling.SetStartTime(DateTime.Now);
             for (int i = 0; i < Height; i++)
             {
                 for (int j = 0; j < Width; j++)
@@ -112,6 +134,10 @@ namespace IntelligentScissors
                     }
                 }
             }
+            if(TestingHandling.GetImageFilePath().IndexOf("Complete") != -1)
+                TestingHandling.PrintConstructedGraphCompleteTest(this);
+            else
+                TestingHandling.PrintConstructedGraphSampleTest(this);
         }
 
         private void Reset()
@@ -122,8 +148,6 @@ namespace IntelligentScissors
                 ParentNode[i] = -1;
             }
         }
-
-       
 
         private void RunDijkstra()
         {
@@ -148,7 +172,6 @@ namespace IntelligentScissors
                     }
                 }
             }
-            
         }
     }
 }

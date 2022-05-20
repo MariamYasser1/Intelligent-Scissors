@@ -10,19 +10,20 @@ namespace IntelligentScissors
 {
     public partial class MainForm : Form
     {
-        int mouseX , mouseY ;
-        List<KeyValuePair<int, int>> lastPath;
+        List<KeyValuePair<int, int>> LastPath;
+        List<Color> LastPathColors;
         bool LiveWire;
-        public MainForm()   
-        {
-            LiveWire = false;
-            lastPath = new List<KeyValuePair<int, int>>();
-            InitializeComponent();
-        }
-
         RGBPixel[,] ImageMatrix;
         Graph ImageGraph;
 
+        public MainForm()   
+        {
+            LiveWire = false;
+            LastPath = new List<KeyValuePair<int, int>>();
+            LastPathColors = new List<Color>();
+            InitializeComponent();
+        }
+        
         private void btnOpen_Click(object sender, EventArgs e)
         {
             OpenFileDialog openFileDialog1 = new OpenFileDialog();
@@ -30,6 +31,8 @@ namespace IntelligentScissors
             {
                 //Open the browsed image and display it
                 string OpenedFilePath = openFileDialog1.FileName;
+                TestingHandling.SetImageFilePath(OpenedFilePath);
+                MessageBox.Show(TestingHandling.GetImageFilePath());
                 ImageMatrix = ImageOperations.OpenImage(OpenedFilePath);
                 ImageOperations.DisplayImage(ImageMatrix, pictureBox1);
                 ImageGraph = new Graph(ImageMatrix);
@@ -38,66 +41,71 @@ namespace IntelligentScissors
             txtHeight.Text = ImageOperations.GetHeight(ImageMatrix).ToString();
         }
 
-        private void btnGaussSmooth_Click(object sender, EventArgs e)
+        private void DrawAnchor(MouseEventArgs e)
         {
-            double sigma = double.Parse(txtGaussSigma.Text);
-            int maskSize = (int)nudMaskSize.Value ;
-            ImageMatrix = ImageOperations.GaussianFilter1D(ImageMatrix, maskSize, sigma);
-            ImageOperations.DisplayImage(ImageMatrix, pictureBox2);
+            Graphics gBmp = Graphics.FromImage(ImageOperations.ImageBMP);
+            gBmp.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
+
+            Brush redBrush = new SolidBrush(Color.Red);
+            gBmp.FillRectangle(redBrush, e.X - 2, e.Y - 2, 4, 4);
+
+            pictureBox1.Image = ImageOperations.ImageBMP;
+        }
+
+        private void DrawShortestPath( int x , int y , bool fix , bool fill)
+        {
+            List<KeyValuePair<int, int>> Path = ImageGraph.GetShortestPath(ImageGraph.GetIndex(x,y));
+            if (fill)
+            {
+                if (LastPath.Count > 0)
+                {
+                    ImageOperations.Update2(ImageMatrix, LastPath, pictureBox1, LastPathColors);
+                }
+                LastPathColors.Clear();
+                foreach (var node in Path)
+                {
+                    LastPathColors.Add(ImageOperations.ImageBMP.GetPixel(node.Key, node.Value));
+                }
+            }
+            LastPath.Clear();
+            if (Path.Count > 0)
+            {
+                ImageOperations.Update(ImageMatrix, Path, pictureBox1);
+            }
+            if (fix)
+            {
+                foreach (var node in Path)
+                    ImageGraph.Fix(node.Key, node.Value);
+            }
+            else
+            {
+                LastPath = Path;
+            }
         }
 
         private void pictureBox1_MouseClick(object sender, MouseEventArgs e)
         {
             LiveWire = true;
-            /*mouseX = e.X;
-            mouseY = e.Y;
-            pictureBox1.Paint += new System.Windows.Forms.PaintEventHandler(this.pictureBox1_Paint);*/
-            lastPath.Clear();
             ImageGraph.SetCurAnchor(e.X, e.Y);
-            List<KeyValuePair<int, int>> Path = ImageGraph.GetShortestPath(ImageGraph.GetLastAnchor());
-            if (Path.Count > 0)
-            {
-                ImageOperations.Update(ImageMatrix, Path, pictureBox1);
-            }
+            var pair = ImageGraph.GetCoordinates(ImageGraph.GetLastAnchor());
+            DrawShortestPath(pair.Key, pair.Value, true, false);
+            DrawAnchor(e);
         }
 
         private void pictureBox1_MouseDoubleClick(object sender, MouseEventArgs e)
         {
-            ImageGraph.SetCurAnchor(e.X, e.Y);
-            List<KeyValuePair<int, int>> Path = ImageGraph.GetShortestPath(ImageGraph.GetStartAnchor());
-            if (Path.Count > 0)
-            {
-                ImageOperations.Update(ImageMatrix, Path, pictureBox1);
-            }
             LiveWire = false;
+            ImageGraph.SetCurAnchor(e.X, e.Y);
+            var pair = ImageGraph.GetCoordinates(ImageGraph.GetStartAnchor());
+            DrawShortestPath(pair.Key,pair.Value, true, false);
         }
 
         private void pictureBox1_MouseMove(object sender, MouseEventArgs e)
         {
-            if (!LiveWire || ImageGraph == null || ImageGraph.GetStartAnchor() == -1)
+            if (!LiveWire)
                 return;
-            if (lastPath.Count > 0)
-            {
-                ImageOperations.Update2(ImageMatrix, lastPath, pictureBox1);
-            }
-            List<KeyValuePair<int, int>> Path = ImageGraph.GetShortestPath(ImageGraph.GetIndex(e.X,e.Y));
-            if (Path.Count > 0)
-            {
-                ImageOperations.Update(ImageMatrix, Path, pictureBox1);
-            }
-            lastPath = Path;
+            DrawShortestPath(e.X, e.Y, false, true);
         }
 
-        private void pictureBox1_Paint(object sender, PaintEventArgs e)
-        {
-            Pen blackPen = new Pen(Color.Red, 10);
-            // Create location and size of rectangle.
-            int width = 50;
-            int height = 50;
-
-            // Draw rectangle to screen.
-            e.Graphics.DrawRectangle(blackPen, mouseX, mouseY, width, height);
-            pictureBox1.Refresh();
-        }
     }
 }
